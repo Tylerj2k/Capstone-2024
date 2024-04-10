@@ -1,0 +1,122 @@
+from dronekit import connect, VehicleMode
+import tkinter as tk
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.figure import Figure
+import time
+
+# Specify the COM port and baud rate
+connection_string = 'COM6'
+baud_rate = 57600
+
+print("Connecting to vehicle on: %s" % connection_string)
+vehicle = connect(connection_string, baud=baud_rate, wait_ready=True)
+
+# Initialize the Tkinter application
+root = tk.Tk()
+root.title("CubeOrange Data GUI")
+
+# Initialize graph for battery voltage
+fig = Figure(figsize=(6, 4), dpi=100)
+ax = fig.add_subplot(111)
+ax.set_title('Battery Voltage')
+ax.set_xlabel('Time (s)')
+ax.set_ylabel('Voltage (V)')
+line, = ax.plot([], [], 'r-')  # 'line' is the handle for the updating data
+canvas = FigureCanvasTkAgg(fig, master=root)  # A tk.DrawingArea
+canvas.get_tk_widget().pack()
+
+# Initialize variables for graph data
+xdata = []
+ydata = []
+start_time = time.time()
+
+# Function to update the graph
+def update_graph(voltage):
+    xdata.append(time.time() - start_time)
+    ydata.append(voltage)
+    line.set_xdata(xdata)
+    line.set_ydata(ydata)
+    ax.relim()
+    ax.autoscale_view()
+    canvas.draw()
+
+# Function to update data and GUI
+def update_data_and_gui():
+    # Fetch new data from the vehicle
+    global_location = vehicle.location.global_frame
+    attitude = vehicle.attitude
+    velocity = vehicle.velocity
+    groundspeed = vehicle.groundspeed
+    airspeed = vehicle.airspeed
+    battery_voltage = vehicle.battery.voltage * 25
+    battery_current = vehicle.battery.current
+    battery_level = vehicle.battery.level
+    last_heartbeat = vehicle.last_heartbeat
+    heading = vehicle.heading
+    is_armable = vehicle.is_armable
+    system_status = vehicle.system_status.state
+    mode = vehicle.mode.name
+    armed = vehicle.armed
+
+    # Update the graph with the new voltage data
+    update_graph(battery_voltage)
+
+    # Update GUI labels with the latest data
+    global_location_label.config(text=str(global_location))
+    attitude_label.config(text="Attitude: " + str(attitude))
+    velocity_label.config(text="Velocity: " + str(velocity))
+    groundspeed_label.config(text="Groundspeed: " + str(groundspeed))
+    airspeed_label.config(text="Airspeed: " + str(airspeed))
+    battery_voltage_label.config(text="Battery Voltage: " + str(battery_voltage))
+    battery_current_label.config(text="Battery Current: " + str(battery_current))
+    battery_level_label.config(text="Battery Level: " + str(battery_level))
+    last_heartbeat_label.config(text="Last Heartbeat: " + str(last_heartbeat))
+    heading_label.config(text="Heading: " + str(heading))
+    is_armable_label.config(text="Is Armable?: " + str(is_armable))
+    system_status_label.config(text="System Status: " + str(system_status))
+    mode_label.config(text="Mode: " + str(mode))
+    armed_label.config(text="Armed: " + str(armed))
+
+    # Schedule this function to be called again after 1 second
+    root.after(1000, update_data_and_gui)
+    
+battery_voltage_label = tk.Label(root, text="Battery Voltage: ")
+battery_voltage_label.pack()
+global_location_label = tk.Label(root, text="")
+global_location_label.pack()
+attitude_label = tk.Label(root, text="")
+attitude_label.pack()
+velocity_label = tk.Label(root, text="")
+velocity_label.pack()
+groundspeed_label = tk.Label(root, text="")
+groundspeed_label.pack()
+airspeed_label = tk.Label(root, text="")
+airspeed_label.pack()
+battery_voltage_label = tk.Label(root, text="")
+battery_voltage_label.pack()
+battery_current_label = tk.Label(root, text="")
+battery_current_label.pack()
+battery_level_label = tk.Label(root, text="")
+battery_level_label.pack()
+last_heartbeat_label = tk.Label(root, text="")
+last_heartbeat_label.pack()
+heading_label = tk.Label(root, text="")
+heading_label.pack()
+is_armable_label = tk.Label(root, text="")
+is_armable_label.pack()
+system_status_label = tk.Label(root, text="")
+system_status_label.pack()
+mode_label = tk.Label(root, text="")
+mode_label.pack()
+armed_label = tk.Label(root, text="")
+armed_label.pack()
+# Schedule the first update
+root.after(1000, update_data_and_gui)
+
+# Run the Tkinter event loop
+root.mainloop()
+
+# Close connection to CubeOrange
+vehicle.close()
+
+print("Connection closed")
