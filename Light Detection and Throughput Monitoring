@@ -1,0 +1,73 @@
+import time
+from picamera2 import Picamera2
+import cv2
+import matplotlib.pyplot as plt
+import tkinter as tk
+from tkinter import ttk
+
+print(Picamera2.global_camera_info())
+
+
+def update_gui(light_detected):
+    if light_detected:
+        label.config(text="Light Throughput", background="green")
+    else:
+        label.config(text="No Light Throughput", background="red")
+    root.update()
+
+def process_image(image_path):
+    # Load the image
+    img = cv2.imread(image_path)
+    
+    if img is None:
+        print("no image")
+    else:
+        print("image imported")
+        
+
+    # Convert the image to grayscale
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    
+
+    # Apply intensity thresholding
+    _, thresh_img = cv2.threshold(gray_img, 30, 255, cv2.THRESH_BINARY)
+
+    # Check if light is detected in the center
+    center_x = img.shape[1] // 2
+    center_y = img.shape[0] // 2
+    
+    
+    light_detected = thresh_img[center_y, center_x] == 255
+
+    return light_detected
+
+
+root = tk.Tk()
+root.title("Status")
+root.geometry("175x120")
+
+label = ttk.Label(root, text="Starting...", background="grey", font=("Arial", 16))
+label.pack(expand=True, fill=tk.BOTH)
+
+# Loop to keep taking photos every 5 seconds
+while True:
+    picam2a = Picamera2(0)
+    picam2a.start()
+    picam2a.set_controls({"ExposureTime": 950, "AnalogueGain": 6000.0, "Brightness": 0})
+    time.sleep(0.5)
+
+    # Capture an image
+    image_path = "/home/pi/captures/Capture.jpg"
+    metadata = picam2a.capture_file(image_path)
+    time.sleep(1)
+    print(metadata)
+    
+    
+    
+    picam2a.close()
+
+    # Process the captured image to check for light
+    light_detected = process_image(image_path)
+    
+    
+    update_gui(light_detected)
