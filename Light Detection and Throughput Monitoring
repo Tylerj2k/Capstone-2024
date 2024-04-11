@@ -49,7 +49,7 @@ root.geometry("175x120")
 label = ttk.Label(root, text="Starting...", background="grey", font=("Arial", 16))
 label.pack(expand=True, fill=tk.BOTH)
 
-# Loop to keep taking photos every 5 seconds
+# Loop to keep taking photos every 0.5 seconds
 while True:
     picam2a = Picamera2(0)
     picam2a.start()
